@@ -1,0 +1,19 @@
+[
+{
+  "id": "1",
+  "title": "개인 홈페이지를 만들어 봤습니다",
+  "excerpt": "개인 홈페이지를 React+Vite로 구현해 보았습니다.",
+  "date": "2025-09-16",
+  "image": "public/img/winter.jpg",
+  "content": "<h2>1. 구현 내용</h2> 개인 홈페이지를 React+Vite로 구현해 보았습니다.<br/>정적 페이지이기 때문에 글쓰기 페이지를 Json 복사/붙여넣기용으로 설계했습니다.<br/>사용해 보세요!",
+  "tags": [
+    "Project",
+    "HomePage",
+    "Open"
+  ],
+  "category": {
+    "key": "etc",
+    "label": "기타"
+  }
+}
+]
