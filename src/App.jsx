@@ -1,23 +1,46 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Routes, Route, Link, useParams, useNavigate, Outlet } from "react-router-dom";
+import { Routes, Route, Link, useParams, useNavigate, Outlet, useLocation } from "react-router-dom";
 import PostCard from "./components/PostCard.jsx";
 import Container from "./components/Container.jsx";
 import SidebarProfile from "./components/SidebarProfile.jsx";
 import Write from "./pages/Write.jsx";
 
 function Layout() {
+  // 상세보기(PostDetail)에서는 사이드바 숨김 (모바일/데스크탑 모두)
+  const location = useLocation();
+  const isDetail = /^\/post\//.test(location.pathname);
+  const isWrite = location.pathname === "/write" || location.pathname === "/my-page/write";
+  const [windowWidth, setWindowWidth] = React.useState(window.innerWidth);
+  const isMobile = windowWidth <= 640;
+  const isPad = windowWidth <= 900;
+  React.useEffect(() => {
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  // 상세보기: 데스크탑에서만 프로필, 글쓰기: 패드 이하에서는 프로필 숨김
+  const showSidebar = (
+    (!isDetail && !isWrite) ||
+    (isDetail && !isMobile) ||
+    (isWrite && !isPad)
+  );
   return (
     <Container>
       <div style={styles.pageLayout} className="pageLayout">
-        {/* ✅ 사이드바: 여기서 딱 1번만 렌더 */}
-        <SidebarProfile
-          username="dmseong"
-          name="김성희"
-          role="Sookmyung Woman's Univ CS 23"
-          lines={["코딩 교육봉사 동아리 CNTO 7기", "알고리즘 학회 ALGOS 14기", "중앙 프로그래밍 동아리 SOLUX 30기"]}
-        />
-        {/* 여기에 페이지 콘텐츠가 꽂힘 */}
-        <div style={styles.pageMain}>
+        {showSidebar && (
+          <div
+            className={isMobile ? "sidebar-mobile" : undefined}
+            style={{ marginTop: 20, ...(isMobile ? { width: "100%", maxWidth: "100%" } : {}) }}
+          >
+            <SidebarProfile
+              username="dmseong"
+              name="김성희"
+              role="Sookmyung Woman's Univ CS 23"
+              lines={["코딩 교육봉사 동아리 CNTO 7기", "알고리즘 학회 ALGOS 14기", "중앙 프로그래밍 동아리 SOLUX 30기"]}
+            />
+          </div>
+        )}
+        <div style={styles.pageMain} className="pageMain">
           <Outlet />
         </div>
       </div>
@@ -32,10 +55,10 @@ export default function App() {
 
       <header style={styles.header}>
         <div style={styles.headerRow}>
-          <Link to="/" style={styles.logo}>Seonghui Kim's Home</Link>
+          <Link to="/my-page/" style={styles.logo}>Seonghui Kim's Home</Link>
           <nav style={styles.nav}>
             <Link to="/write" style={styles.navLink}>글쓰기</Link>
-            <Link to="/" style={styles.navLink}>홈</Link>
+            <Link to="/my-page/" style={styles.navLink}>홈</Link>
           </nav>
         </div>
       </header>
@@ -44,7 +67,7 @@ export default function App() {
         <Routes>
           {/* ✅ Layout 아래에 자식 라우트로 Home/Detail 배치 */}
           <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
+            <Route path="/my-page/" element={<Home />} />
             <Route path="/post/:id" element={<PostDetail />} />
             <Route path="/write" element={<Write />} />
           </Route>
@@ -66,8 +89,8 @@ function Home() {
 
 
   useEffect(() => {
-    // public/posts.json에서 정적 로드
-    fetch("/posts.json")
+    // /my-page/posts.json에서 정적 로드
+    fetch("/my-page/posts.json")
       .then((r) => r.json())
       .then(setPosts)
       .catch((e) => console.error("posts.json 로드 실패", e));
@@ -123,7 +146,8 @@ function Home() {
 
 function PostDetail() {
   // 이미지 경로 보정 함수
-  const getImageSrc = (src) => src ? src.replace(/^public\//, '/') : '';
+  // 이미지 경로를 BASE_URL + img/로 보정 (gh-pages 대응)
+  const getImageSrc = (src) => src ? (import.meta.env.BASE_URL + src.replace(/^\/?img\//, "img/")) : '';
   const { id } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
@@ -131,7 +155,7 @@ function PostDetail() {
 
 
   useEffect(() => {
-    fetch("/posts.json")
+    fetch("/my-page/posts.json")
       .then((r) => r.json())
       .then((all) => all.find((p) => String(p.id) === String(id)))
       .then((found) => setPost(found || null))
@@ -167,17 +191,17 @@ function PostDetail() {
   });
 
   return (
-    <article style={styles.detail}>
+    <article style={styles.detail} className="detail">
       <button onClick={() => navigate(-1)} style={styles.backLink}>← 목록으로</button>
       <img src={getImageSrc(post.image)} alt="thumbnail" style={styles.detailThumb} />
-      <h1 style={{ margin: "40px 10px 4px", fontSize: 38 }}>
+      <h1 className="detail-title" style={{ margin: "40px 10px 4px", fontSize: 38 }}>
         {post.title}
         {post.category && post.category.key && post.category.label && (
           <span style={badgeStyle(post.category.key)}>{post.category.label}</span>
         )}
       </h1>
-      <p style={styles.meta}>{formatDate(post.date)}</p>
-      <div style={{ lineHeight: 1.8, marginTop: 12 }} dangerouslySetInnerHTML={{ __html: post.content }} />
+      <p className="detail-meta" style={styles.meta}>{formatDate(post.date)}</p>
+      <div className="detail-content" style={{ lineHeight: 1.8, marginTop: 12 }} dangerouslySetInnerHTML={{ __html: post.content }} />
       <div style={{ marginTop: 12 }}>
         {(post.tags || []).map((t) => <span key={t} style={styles.tag}>#{t}</span>)}
       </div>
@@ -233,13 +257,71 @@ const styles = {
   btn: { height: 36, padding: "0 12px", border: "1px solid #e5e7eb", borderRadius: 10, background: "#fff" },
   backLink: { background: "transparent", border: "none", color: "#2563eb", cursor: "pointer", marginBottom: 8 },
   pageLayout: { display: "grid", gridTemplateColumns: "360px 1fr", gap: 32, alignItems: "start" },
-  pageMain: { minWidth: 0 },
+  pageMain: { minWidth: 0, display: "flex", flexDirection: "column" },
 };
 
 function Style() {
   return (
     <style>{`
-      @media (max-width: 640px) { .grid { grid-template-columns: 1fr !important; } }
+      /* 상세보기 내용이 남은 공간을 모두 채우도록 */
+      .pageMain .detail {
+        width: 100%;
+        flex-grow: 1;
+      }
+      /* 상세보기 영역 중앙 정렬 및 반응형 크기 */
+      .detail {
+        width: 100%;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+      }
+      @media (max-width: 900px) {
+        .detail {
+          max-width: 100% !important;
+          width: 100% !important;
+        }
+        .write-wrap {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .pageLayout {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 0 !important;
+        }
+        .sidebar-mobile {
+          margin-bottom: 24px !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .sidebar-mobile > aside {
+          width: 100% !important;
+          max-width: 100% !important;
+          border-radius: 0 !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+        .pageMain {
+          min-width: 0;
+        }
+      }
+      @media (max-width: 1200px) {
+        .grid { grid-template-columns: 1fr !important; }
+      }
+      @media (max-width: 640px) {
+        /* 카드 상세보기 폰트 크기 조정 */
+        .detail-content {
+          font-size: 16px !important;
+        }
+        .detail-title {
+          font-size: 26px !important;
+          margin-top: 24px !important;
+        }
+        .detail-meta {
+          font-size: 14px !important;
+          margin-top: 8px !important;
+        }
+      }
       * { box-sizing: border-box; }
       body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Apple SD Gothic Neo, 'Malgun Gothic', sans-serif; }
       a { color: inherit }

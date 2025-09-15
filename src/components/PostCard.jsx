@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 
 export default function PostCard({ post }) {
+            // 이미지 경로를 BASE_URL + img/로 보정 (gh-pages 대응)
+            const getImageSrc = (src) => src ? (import.meta.env.BASE_URL + src.replace(/^\/?img\//, "img/")) : '';
         // 카테고리 뱃지 색상 매핑
         const categoryColors = {
             club: "#2563eb",
@@ -24,7 +26,7 @@ export default function PostCard({ post }) {
         return (
                 <article style={card.card}>
                         <Link to={`/post/${post.id}`} style={card.thumbWrap} aria-label={`${post.title} 상세보기`}>
-                            <img src={post.image} alt="thumbnail" style={card.thumb} />
+                      <img src={getImageSrc(post.image)} alt="thumbnail" style={card.thumb} />
                         </Link>
                         <div style={card.body}>
                                 <h3 style={card.title}>

@@ -69,7 +69,7 @@ export default function Write() {
       .replace(/^public\/img\//i, "")
       .replace(/^\/?img\//i, "")
       .replace(/^\/+/, "");
-    return `public/img/${name}`;
+    return `img/${name}`;
   }, [image]);
 
   // content HTML 빌드 (모든 제목을 h2로)
@@ -158,7 +158,7 @@ export default function Write() {
   };
 
   return (
-    <div style={st.wrap}>
+    <div style={st.wrap} className="write-wrap">
       <h1 style={st.h1}>글쓰기 (JSON 생성)</h1>
 
       {/* 공통 필드 */}
@@ -193,7 +193,7 @@ export default function Write() {
         <input
           value={image}
           onChange={(e) => setImage(e.target.value)}
-          placeholder="예) my-photo.jpg (자동으로 public/img/ 접두사 추가, https:// 가능)"
+          placeholder="예) my-photo.jpg (자동으로 img/ 접두사 추가, https:// 가능)"
           style={st.input}
         />
       </div>
@@ -346,7 +346,7 @@ export default function Write() {
 
 
 const st = {
-  wrap: { background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: 16 },
+  wrap: { width: "100%", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: 16, marginTop: 20 },
   h1: { marginTop: 0, fontSize: 22 },
   row: { display: "grid", gridTemplateColumns: "140px 1fr", gap: 10, alignItems: "start", margin: "10px 0" },
   label: { color: "#374151", paddingTop: 8, fontSize: 14 },
